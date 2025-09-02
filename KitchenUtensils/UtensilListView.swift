@@ -10,25 +10,15 @@ import SwiftUI
 
 struct UtensilListView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: \Utensil.creationDate, order: .reverse) private var items: [Utensil]
+    @Query(sort: \Utensil.creationDate, order: .reverse) private var utensils: [Utensil]
 
     var body: some View {
         List {
-            ForEach(items) { item in
+            ForEach(utensils) { utensil in
                 NavigationLink {
-                    Text(item.name)
-                        .font(.headline)
-                    Text("Created: \(item.creationDate, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                    Text("File extension: .\(item.fileExtension)")
-                    Text(item.id.uuidString)
+                    UtensilDetailView(utensil: utensil)
                 } label: {
-                    VStack(alignment: .leading) {
-                        Text(item.name)
-                            .font(.headline)
-                        Text("\(item.creationDate, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
+                    UtensilCellView(utensil: utensil)
                 }
             }
             .onDelete(perform: deleteItems)
@@ -38,9 +28,36 @@ struct UtensilListView: View {
     private func deleteItems(offsets: IndexSet) {
         withAnimation {
             for index in offsets {
-                modelContext.delete(items[index])
+                modelContext.delete(utensils[index])
             }
         }
+    }
+}
+
+private struct UtensilCellView: View {
+    let utensil: Utensil
+    
+    var body: some View {
+        VStack(alignment: .leading) {
+            Text(utensil.name)
+                .font(.headline)
+            Text("\(utensil.creationDate, format: Date.FormatStyle(date: .numeric, time: .standard))")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+        
+    }
+}
+
+private struct UtensilDetailView: View {
+    let utensil: Utensil
+    
+    var body: some View {
+        Text(utensil.name)
+            .font(.headline)
+        Text("Created: \(utensil.creationDate, format: Date.FormatStyle(date: .numeric, time: .standard))")
+        Text("File extension: .\(utensil.fileExtension)")
+        Text(utensil.id.uuidString)
     }
 }
 
