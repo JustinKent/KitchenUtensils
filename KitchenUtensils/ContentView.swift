@@ -14,36 +14,18 @@ struct ContentView: View {
 
     var body: some View {
         NavigationSplitView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text(item.name)
-                            .font(.headline)
-                        Text("Created: \(item.creationDate, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                        Text("File extension: .\(item.fileExtension)")
-                        Text(item.id.uuidString)
-                    } label: {
-                        VStack(alignment: .leading) {
-                            Text(item.name)
-                                .font(.headline)
-                            Text("\(item.creationDate, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
+            UtensilListView()
+                .navigationBarTitle("Kitchen Utensils")
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        EditButton()
+                    }
+                    ToolbarItem {
+                        Button(action: addItem) {
+                            Label("Add Item", systemImage: "plus")
                         }
                     }
                 }
-                .onDelete(perform: deleteItems)
-            }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
-                    }
-                }
-            }
         } detail: {
             Text("Select an item")
         }
@@ -60,13 +42,6 @@ struct ContentView: View {
         }
     }
 
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(items[index])
-            }
-        }
-    }
 }
 
 #Preview {
