@@ -12,6 +12,8 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var items: [Utensil]
 
+    @State private var isPresentingAddUtensil = false
+
     var body: some View {
         NavigationSplitView {
             UtensilListView()
@@ -21,7 +23,7 @@ struct ContentView: View {
                         EditButton()
                     }
                     ToolbarItem {
-                        Button(action: addItem) {
+                        Button(action: { isPresentingAddUtensil = true }) {
                             Label("Add Item", systemImage: "plus")
                         }
                     }
@@ -29,13 +31,15 @@ struct ContentView: View {
         } detail: {
             Text("Select an item")
         }
+        .sheet(isPresented: $isPresentingAddUtensil) {
+            AddUtensilView()
+        }
     }
 
     private func addItem() {
         withAnimation {
             let newItem = Utensil(
                 name: "New Utensil",
-                fileExtension: "heic",
                 creationDate: Date()
             )
             modelContext.insert(newItem)
