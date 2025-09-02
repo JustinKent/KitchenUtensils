@@ -10,16 +10,26 @@ import SwiftData
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
+    @Query private var items: [Utensil]
 
     var body: some View {
         NavigationSplitView {
             List {
                 ForEach(items) { item in
                     NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
+                        Text(item.name)
+                            .font(.headline)
+                        Text("Created: \(item.creationDate, format: Date.FormatStyle(date: .numeric, time: .standard))")
+                        Text("File extension: .\(item.fileExtension)")
+                        Text(item.id.uuidString)
                     } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
+                        VStack(alignment: .leading) {
+                            Text(item.name)
+                                .font(.headline)
+                            Text("\(item.creationDate, format: Date.FormatStyle(date: .numeric, time: .standard))")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
                     }
                 }
                 .onDelete(perform: deleteItems)
@@ -41,7 +51,11 @@ struct ContentView: View {
 
     private func addItem() {
         withAnimation {
-            let newItem = Item(timestamp: Date())
+            let newItem = Utensil(
+                name: "New Utensil",
+                fileExtension: "heic",
+                creationDate: Date()
+            )
             modelContext.insert(newItem)
         }
     }
@@ -57,5 +71,5 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
+        .modelContainer(for: Utensil.self, inMemory: true)
 }
