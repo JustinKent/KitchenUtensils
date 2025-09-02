@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		D0BF37252E67B71E00C1A466 /* KitchenUtensils.icon in Resources */ = {isa = PBXBuildFile; fileRef = D0BF37242E67B71E00C1A466 /* KitchenUtensils.icon */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		D0EDD9F92E6798A400CDC1FA /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -24,6 +28,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		D0BF37242E67B71E00C1A466 /* KitchenUtensils.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = KitchenUtensils.icon; sourceTree = "<group>"; };
 		D0EDD9E92E6798A200CDC1FA /* KitchenUtensils.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KitchenUtensils.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0EDD9F82E6798A400CDC1FA /* KitchenUtensilsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KitchenUtensilsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0EDDA022E6798A400CDC1FA /* KitchenUtensilsUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KitchenUtensilsUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -75,6 +80,7 @@
 		D0EDD9E02E6798A200CDC1FA = {
 			isa = PBXGroup;
 			children = (
+				D0BF37242E67B71E00C1A466 /* KitchenUtensils.icon */,
 				D0EDD9EB2E6798A200CDC1FA /* KitchenUtensils */,
 				D0EDD9FB2E6798A400CDC1FA /* KitchenUtensilsTests */,
 				D0EDDA052E6798A400CDC1FA /* KitchenUtensilsUITests */,
@@ -212,6 +218,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D0BF37252E67B71E00C1A466 /* KitchenUtensils.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -393,7 +400,7 @@
 		D0EDDA0D2E6798A400CDC1FA /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = KitchenUtensils;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -427,7 +434,7 @@
 		D0EDDA0E2E6798A400CDC1FA /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = KitchenUtensils;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
