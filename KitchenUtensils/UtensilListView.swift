@@ -13,16 +13,33 @@ struct UtensilListView: View {
     @Query(sort: \Utensil.creationDate, order: .reverse) private var utensils: [Utensil]
 
     var body: some View {
-        List {
-            ForEach(utensils) { utensil in
-                NavigationLink {
-                    UtensilDetailView(utensil: utensil)
-                } label: {
-                    UtensilCellView(utensil: utensil)
+        Group {
+            if utensils.isEmpty {
+                emptyStateView
+            } else {
+                List {
+                    ForEach(utensils) { utensil in
+                        NavigationLink {
+                            UtensilDetailView(utensil: utensil)
+                        } label: {
+                            UtensilCellView(utensil: utensil)
+                        }
+                    }
+                    .onDelete(perform: deleteItems)
                 }
             }
-            .onDelete(perform: deleteItems)
         }
+    }
+    
+    private var emptyStateView: some View {
+        VStack {
+            ContentUnavailableView(
+                "No Utensils",
+                systemImage: "fork.knife",
+                description: Text("Add a utensil to get started.")
+            )
+        }
+        .padding()
     }
     
     private func deleteItems(offsets: IndexSet) {
@@ -93,7 +110,6 @@ private extension Utensil {
 #Preview("UtensilDetailView - Spatula") {
     NavigationStack {
         UtensilDetailView(utensil: .sampleSpatula)
-            .padding()
             .navigationTitle("Details")
     }
 }
