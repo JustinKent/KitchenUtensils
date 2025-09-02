@@ -61,6 +61,47 @@ private struct UtensilDetailView: View {
     }
 }
 
-#Preview {
-    UtensilListView()
+// MARK: - Previews
+
+private extension Utensil {
+    static var sampleSpatula: Utensil {
+        Utensil(
+            id: UUID(uuidString: "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE") ?? UUID(),
+            name: "Spatula",
+            fileExtension: "heic",
+            creationDate: Date(timeIntervalSinceReferenceDate: 778_543_810)
+        )
+    }
+    
+    static var sampleWhisk: Utensil {
+        Utensil(
+            id: UUID(uuidString: "11111111-2222-3333-4444-555555555555") ?? UUID(),
+            name: "Whisk",
+            fileExtension: "jpg",
+            creationDate: Date(timeIntervalSinceReferenceDate: 778_543_566)
+        )
+    }
+}
+
+#Preview("UtensilCellView - Spatula") {
+    List {
+        UtensilCellView(utensil: .sampleSpatula)
+        UtensilCellView(utensil: .sampleWhisk)
+    }
+}
+
+#Preview("UtensilDetailView - Spatula") {
+    NavigationStack {
+        UtensilDetailView(utensil: .sampleSpatula)
+            .padding()
+            .navigationTitle("Details")
+    }
+}
+
+#Preview("UtensilListView (empty)") {
+    NavigationStack {
+        UtensilListView()
+            .navigationTitle("Kitchen Utensils")
+    }
+    .modelContainer(for: Utensil.self, inMemory: true)
 }
