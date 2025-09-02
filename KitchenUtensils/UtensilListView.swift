@@ -10,6 +10,7 @@ import SwiftUI
 
 struct UtensilListView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.imageRepository) private var imageRepository
     @Query(sort: \Utensil.creationDate, order: .reverse) private var utensils: [Utensil]
 
     var body: some View {
@@ -73,7 +74,6 @@ private struct UtensilDetailView: View {
         Text(utensil.name)
             .font(.headline)
         Text("Created: \(utensil.creationDate, format: Date.FormatStyle(date: .numeric, time: .standard))")
-        Text("File extension: .\(utensil.fileExtension)")
         Text(utensil.id.uuidString)
     }
 }
@@ -85,7 +85,6 @@ private extension Utensil {
         Utensil(
             id: UUID(uuidString: "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE") ?? UUID(),
             name: "Spatula",
-            fileExtension: "heic",
             creationDate: Date(timeIntervalSinceReferenceDate: 778_543_810)
         )
     }
@@ -94,7 +93,6 @@ private extension Utensil {
         Utensil(
             id: UUID(uuidString: "11111111-2222-3333-4444-555555555555") ?? UUID(),
             name: "Whisk",
-            fileExtension: "jpg",
             creationDate: Date(timeIntervalSinceReferenceDate: 778_543_566)
         )
     }

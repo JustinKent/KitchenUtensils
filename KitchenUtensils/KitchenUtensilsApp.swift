@@ -10,6 +10,8 @@ import SwiftData
 
 @main
 struct KitchenUtensilsApp: App {
+    private let imageRepository = ImageRepository()
+
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Utensil.self,
@@ -26,6 +28,7 @@ struct KitchenUtensilsApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(\.imageRepository, imageRepository)
         }
         .modelContainer(sharedModelContainer)
     }

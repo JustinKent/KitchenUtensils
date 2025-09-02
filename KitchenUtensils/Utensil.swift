@@ -12,18 +12,15 @@ import SwiftData
 final class Utensil {
     @Attribute(.unique) var id: UUID
     var name: String
-    var fileExtension: String
     var creationDate: Date
     
     init(
         id: UUID = UUID(),
         name: String,
-        fileExtension: String,
         creationDate: Date
     ) {
         self.id = id
         self.name = name
-        self.fileExtension = fileExtension
         self.creationDate = creationDate
     }
 }
