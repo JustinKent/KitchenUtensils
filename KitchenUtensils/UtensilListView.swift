@@ -58,11 +58,10 @@ struct UtensilListView: View {
 
 private struct UtensilCellView: View {
     let utensil: Utensil
-    @Environment(\.imageRepository) private var imageRepository
     
     var body: some View {
         HStack(spacing: 12) {
-            thumbnailView
+            UtensilCellThumbnailView(utensil: utensil)
             VStack(alignment: .leading) {
                 Text(utensil.name)
                     .font(.headline)
@@ -72,11 +71,18 @@ private struct UtensilCellView: View {
             }
         }
     }
+}
+
+private struct UtensilCellThumbnailView: View {
+    @Environment(\.imageRepository) private var imageRepository
+    let utensil: Utensil
     
-    private var thumbnailView: some View {
-        Group {
-            if let uiImage = imageRepository.thumbnail(for: utensil.id.uuidString) {
-                Image(uiImage: uiImage)
+    @State private var image: UIImage?
+    
+    var body: some View {
+        VStack {
+            if let image {
+                Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
                     .frame(width: 60, height: 60)
@@ -94,26 +100,35 @@ private struct UtensilCellView: View {
                 .accessibilityIdentifier("Utensil Image Placeholder")
             }
         }
+        .task(id: utensil.id) {
+            image = await imageRepository.thumbnail(for: utensil.id.uuidString)
+        }
     }
 }
 
 private struct UtensilDetailView: View {
     let utensil: Utensil
-    @Environment(\.imageRepository) private var imageRepository
 
     var body: some View {
         ScrollView {
-            imageView
+            UtensilDetailImageView(utensil: utensil)
             Text("Created: \(utensil.creationDate, format: Date.FormatStyle(date: .numeric, time: .standard))")
             Text(utensil.id.uuidString)
         }
         .navigationTitle(utensil.name)
     }
+}
+
+private struct UtensilDetailImageView: View {
+    let utensil: Utensil
+    @Environment(\.imageRepository) private var imageRepository
+
+    @State private var image: UIImage?
     
-    private var imageView: some View {
-        Group {
-            if let uiImage = imageRepository.original(for: utensil.id.uuidString) {
-                Image(uiImage: uiImage)
+    var body: some View {
+        VStack {
+            if let image {
+                Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
                     .clipped()
@@ -121,6 +136,9 @@ private struct UtensilDetailView: View {
             } else {
                 EmptyView()
             }
+        }
+        .task(id: utensil.id) {
+            image = await imageRepository.original(for: utensil.id.uuidString)
         }
     }
 }

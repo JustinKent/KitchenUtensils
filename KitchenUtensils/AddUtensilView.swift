@@ -51,15 +51,15 @@ struct AddUtensilView: View {
                 }
 
                 Section("Photo") {
+                    // Compute a snapshot in the Section scope (main-actor)
+                    let hasPreview = (pickedUIImage != nil)
+
                     PhotosPicker(
                         selection: $selectedPhotoItem,
                         matching: .images,
                         photoLibrary: .shared()
                     ) {
-                        HStack {
-                            Image(systemName: "photo.on.rectangle")
-                            Text(pickedUIImage == nil ? "Choose Photo" : "Choose Different Photo")
-                        }
+                        PhotoPickerLabel(hasPreview: hasPreview)
                     }
                     .onChange(of: selectedPhotoItem) { _, newItem in
                         Task { await loadPickedPhoto(from: newItem) }
@@ -217,6 +217,17 @@ struct AddUtensilView: View {
         if data.starts(with: [0x52, 0x49, 0x46, 0x46]) { return "heic" } // HEIC/HEIF may vary; this is not precise
         // Could expand with UTType detection if needed
         return nil
+    }
+}
+
+private struct PhotoPickerLabel: View {
+    let hasPreview: Bool
+
+    var body: some View {
+        HStack {
+            Image(systemName: "photo.on.rectangle")
+            Text(hasPreview ? "Choose Different Photo" : "Choose Photo")
+        }
     }
 }
 
