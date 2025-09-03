@@ -19,9 +19,6 @@ struct ContentView: View {
             UtensilListView()
                 .navigationBarTitle("Kitchen Utensils")
                 .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        EditButton()
-                    }
                     ToolbarItem {
                         Button(action: { isPresentingAddUtensil = true }) {
                             Label("Add Item", systemImage: "plus")
