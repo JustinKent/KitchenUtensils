@@ -54,27 +54,80 @@ struct UtensilListView: View {
 
 private struct UtensilCellView: View {
     let utensil: Utensil
+    @Environment(\.imageRepository) private var imageRepository
     
     var body: some View {
-        VStack(alignment: .leading) {
-            Text(utensil.name)
-                .font(.headline)
-            Text("\(utensil.creationDate, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+        HStack(spacing: 12) {
+            thumbnailView
+            VStack(alignment: .leading) {
+                Text(utensil.name)
+                    .font(.headline)
+                Text("\(utensil.creationDate, format: Date.FormatStyle(date: .numeric, time: .standard))")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
         }
-        
+    }
+    
+    private var thumbnailView: some View {
+        Group {
+            if let uiImage = imageRepository.thumbnail(for: utensil) {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 60, height: 60)
+                    .clipped()
+                    .cornerRadius(8)
+                    .accessibilityIdentifier("\(utensil.name) Image")
+            } else {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.secondary.opacity(0.15))
+                    Image(systemName: "photo")
+                        .foregroundStyle(.secondary)
+                }
+                .frame(width: 60, height: 60)
+                .accessibilityIdentifier("Utensil Image Placeholder")
+            }
+        }
     }
 }
 
 private struct UtensilDetailView: View {
     let utensil: Utensil
-    
+    @Environment(\.imageRepository) private var imageRepository
+
     var body: some View {
-        Text(utensil.name)
-            .font(.headline)
-        Text("Created: \(utensil.creationDate, format: Date.FormatStyle(date: .numeric, time: .standard))")
-        Text(utensil.id.uuidString)
+        ScrollView {
+            imageView
+            Text("Created: \(utensil.creationDate, format: Date.FormatStyle(date: .numeric, time: .standard))")
+            Text(utensil.id.uuidString)
+        }
+        .navigationTitle(utensil.name)
+    }
+    
+    private var imageView: some View {
+        Group {
+            if let uiImage = imageRepository.original(for: utensil) {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .scaledToFill()
+                    .clipped()
+                    .accessibilityIdentifier("\(utensil.name) Image")
+            } else {
+                EmptyView()
+            }
+        }
+    }
+}
+
+fileprivate extension ImageRepository {
+    func thumbnail(for utensil: Utensil) -> UIImage? {
+        self.thumbnail(for: utensil.id.uuidString)
+    }
+    
+    func original(for utensil: Utensil) -> UIImage? {
+        self.original(for: utensil.id.uuidString)
     }
 }
 
