@@ -127,6 +127,27 @@ actor ImageRepository {
         return nil
     }
 
+    func delete(_ name: String) {
+        // Remove from in-memory cache
+        thumbnailCache.removeObject(forKey: name as NSString)
+
+        // Delete thumbnail file
+        let thumbURL = thumbnailURLForName(name)
+        if fileManager.fileExists(atPath: thumbURL.path) {
+            try? fileManager.removeItem(at: thumbURL)
+        }
+
+        // Delete any matching original file across common extensions
+        let possibleExtensions = ["jpg", "jpeg", "png", "heic", "heif", "gif", "tiff", "bmp", "dat"]
+        for ext in possibleExtensions {
+            let url = originalsDirectoryURL.appendingPathComponent(name).appendingPathExtension(ext)
+            if fileManager.fileExists(atPath: url.path) {
+                try? fileManager.removeItem(at: url)
+            }
+        }
+    }
+
+    
     // MARK: - Helpers
 
     // Non-throwing async wrapper to call from Task in init

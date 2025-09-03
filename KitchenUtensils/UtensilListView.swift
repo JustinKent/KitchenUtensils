@@ -46,7 +46,11 @@ struct UtensilListView: View {
     private func deleteItems(offsets: IndexSet) {
         withAnimation {
             for index in offsets {
-                modelContext.delete(utensils[index])
+                let utensil = utensils[index]
+                modelContext.delete(utensil)
+                Task {
+                    await imageRepository.delete(utensil)
+                }
             }
         }
     }
@@ -128,6 +132,10 @@ fileprivate extension ImageRepository {
     
     func original(for utensil: Utensil) -> UIImage? {
         self.original(for: utensil.id.uuidString)
+    }
+    
+    func delete(_ utensil: Utensil) {
+        self.delete(utensil.id.uuidString)
     }
 }
 
