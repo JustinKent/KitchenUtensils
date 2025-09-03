@@ -9,33 +9,22 @@ import Foundation
 import UIKit
 
 actor ImageRepository {
-
-    // MARK: - Configuration
-
     private let fileManager: FileManager
     private let appSupportBaseURL: URL
     private let originalsDirectoryURL: URL
     private let thumbnailsDirectoryURL: URL
-
-    // Longest side for thumbnail in pixels (square size)
-    private let thumbnailMaxPixelSize: CGFloat = 180
-
-    // MARK: - In-memory cache
-
-    // NSCache is thread-safe; we wrap with an actor for orchestration.
-    // Keyed by the provided "named" string.
     private let thumbnailCache = NSCache<NSString, UIImage>()
+    private let thumbnailMaxPixelSize: CGFloat = 180
 
     // MARK: - Init
 
     init(fileManager: FileManager = .default) {
         self.fileManager = fileManager
 
-        // Resolve Application Support directory
         if let base = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first {
             self.appSupportBaseURL = base.appendingPathComponent("KitchenUtensils", isDirectory: true)
         } else {
-            // Fallback to documents if application support is unavailable
+            // fallback to documents if application support is unavailable
             self.appSupportBaseURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
                 .appendingPathComponent("KitchenUtensils", isDirectory: true)
         }
@@ -53,53 +42,36 @@ actor ImageRepository {
     func add(image sourceURL: URL, named name: String) throws {
         try ensureDirectories()
 
-        // Determine destination URLs
         let originalURL = originalURLForName(name, sourceURL: sourceURL)
         let thumbnailURL = thumbnailURLForName(name)
 
-        // Copy original image to originals directory
-        // If a file already exists, replace it.
         if fileManager.fileExists(atPath: originalURL.path) {
             try fileManager.removeItem(at: originalURL)
         }
         try fileManager.copyItem(at: sourceURL, to: originalURL)
 
-        // Generate thumbnail
-        if let originalImage = UIImage(contentsOfFile: originalURL.path) {
-            if let thumb = generateThumbnail(from: originalImage, maxPixelSize: thumbnailMaxPixelSize) {
-                // Save thumbnail to disk (JPEG with reasonable compression)
-                if let data = thumb.jpegData(compressionQuality: 0.8) {
-                    // Ensure parent directory exists
-                    try fileManager.createDirectory(at: thumbnailsDirectoryURL, withIntermediateDirectories: true)
-                    try data.write(to: thumbnailURL, options: .atomic)
-                }
-                // Put into in-memory cache
-                thumbnailCache.setObject(thumb, forKey: name as NSString)
-            } else {
-                // If thumbnail generation fails, ensure cache does not hold stale item
-                thumbnailCache.removeObject(forKey: name as NSString)
+        if let originalImage = UIImage(contentsOfFile: originalURL.path),
+           let thumb = generateThumbnail(from: originalImage, maxPixelSize: thumbnailMaxPixelSize) {
+            thumbnailCache.setObject(thumb, forKey: name as NSString)
+            if let data = thumb.jpegData(compressionQuality: 0.8) {
+                try fileManager.createDirectory(at: thumbnailsDirectoryURL, withIntermediateDirectories: true)
+                try data.write(to: thumbnailURL, options: .atomic)
             }
-        } else {
-            // If we cannot load original after copy, remove any cached thumbnail
-            thumbnailCache.removeObject(forKey: name as NSString)
         }
     }
 
     func thumbnail(for name: String) -> UIImage? {
-        // Check cache first
         if let cached = thumbnailCache.object(forKey: name as NSString) {
             return cached
         }
 
-        // Attempt to load from disk
         let url = thumbnailURLForName(name)
         guard fileManager.fileExists(atPath: url.path),
               let image = UIImage(contentsOfFile: url.path) else {
-            // As a fallback, generate a thumbnail from the original if present
+            // As a fallback, generate a thumbnail from the original if none exists
             if let original = original(for: name) {
                 if let thumb = generateThumbnail(from: original, maxPixelSize: thumbnailMaxPixelSize) {
                     thumbnailCache.setObject(thumb, forKey: name as NSString)
-                    // Best effort: persist the generated thumbnail
                     if let data = thumb.jpegData(compressionQuality: 0.8) {
                         try? fileManager.createDirectory(at: thumbnailsDirectoryURL, withIntermediateDirectories: true)
                         try? data.write(to: url, options: .atomic)
@@ -110,35 +82,28 @@ actor ImageRepository {
             return nil
         }
 
-        // Store in cache and return
         thumbnailCache.setObject(image, forKey: name as NSString)
         return image
     }
 
     func original(for name: String) -> UIImage? {
-        // We don't know the original's extension here; try common ones
-        let possibleExtensions = ["jpg", "jpeg", "png", "heic", "heif", "gif", "tiff", "bmp", "dat"]
         for ext in possibleExtensions {
             let url = originalsDirectoryURL.appendingPathComponent(name).appendingPathExtension(ext)
-            if fileManager.fileExists(atPath: url.path), let img = UIImage(contentsOfFile: url.path) {
-                return img
+            if fileManager.fileExists(atPath: url.path), let image = UIImage(contentsOfFile: url.path) {
+                return image
             }
         }
         return nil
     }
 
     func delete(_ name: String) {
-        // Remove from in-memory cache
         thumbnailCache.removeObject(forKey: name as NSString)
 
-        // Delete thumbnail file
         let thumbURL = thumbnailURLForName(name)
         if fileManager.fileExists(atPath: thumbURL.path) {
             try? fileManager.removeItem(at: thumbURL)
         }
 
-        // Delete any matching original file across common extensions
-        let possibleExtensions = ["jpg", "jpeg", "png", "heic", "heif", "gif", "tiff", "bmp", "dat"]
         for ext in possibleExtensions {
             let url = originalsDirectoryURL.appendingPathComponent(name).appendingPathExtension(ext)
             if fileManager.fileExists(atPath: url.path) {
@@ -146,30 +111,30 @@ actor ImageRepository {
             }
         }
     }
-
+    
+    let possibleExtensions = ["jpg", "jpeg", "png", "heic", "heif", "gif", "tiff", "bmp", "dat"]
     
     // MARK: - Helpers
-
+    
     // Non-throwing async wrapper to call from Task in init
     private func ensureDirectoriesSafely() async {
         do {
             try ensureDirectories()
         } catch {
-            print("ImageRepository: Failed to ensure directories at \(appSupportBaseURL.path): \(error)")
+            fatalError("ImageRepository: Failed to ensure directories at \(appSupportBaseURL.path): \(error)")
         }
     }
-
+    
     private func ensureDirectories() throws {
         // Ensure base Application Support/KitchenUtensils exists first
         try fileManager.createDirectory(at: appSupportBaseURL, withIntermediateDirectories: true)
-
+        
         // Then ensure subdirectories
         try fileManager.createDirectory(at: originalsDirectoryURL, withIntermediateDirectories: true)
         try fileManager.createDirectory(at: thumbnailsDirectoryURL, withIntermediateDirectories: true)
     }
 
     private func originalURLForName(_ name: String, sourceURL: URL) -> URL {
-        // Use the source file's extension if available; otherwise, fall back to .dat
         let ext = sourceURL.pathExtension.isEmpty ? "dat" : sourceURL.pathExtension.lowercased()
         return originalsDirectoryURL.appendingPathComponent(name).appendingPathExtension(ext)
     }

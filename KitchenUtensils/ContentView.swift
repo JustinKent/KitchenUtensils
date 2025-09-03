@@ -5,13 +5,10 @@
 //  Created by Justin Kent on 9/2/25.
 //
 
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Utensil]
-
     @State private var isPresentingAddUtensil = false
 
     var body: some View {
@@ -32,17 +29,6 @@ struct ContentView: View {
             AddUtensilView()
         }
     }
-
-    private func addItem() {
-        withAnimation {
-            let newItem = Utensil(
-                name: "New Utensil",
-                creationDate: Date()
-            )
-            modelContext.insert(newItem)
-        }
-    }
-
 }
 
 #Preview {

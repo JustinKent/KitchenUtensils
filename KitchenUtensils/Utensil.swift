@@ -14,11 +14,9 @@ final class Utensil {
     var name: String
     var creationDate: Date
     
-    init(
-        id: UUID = UUID(),
-        name: String,
-        creationDate: Date
-    ) {
+    init(id: UUID = UUID(),
+         name: String,
+         creationDate: Date) {
         self.id = id
         self.name = name
         self.creationDate = creationDate

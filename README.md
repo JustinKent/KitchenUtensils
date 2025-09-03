@@ -1,10 +1,8 @@
 # Kitchen Utensils 
 
-## (Technical Task, Ritchie Bros Sr Swift Engineer role)
-
 ![Screen Recording](https://github.com/user-attachments/assets/dfc890e5-b5ba-42b2-8999-0bbca98af1f2)
 
-We're creating an iOS app using Swift and SwiftUI called Kitchen Utensils.
+Kitchen Utensils is an iOS app built using Swift, SwiftUI, and SwiftData. It supports Swift 6, Xcode/iOS 26, and Swift Testing for unit tests.
 
 The main ContentView will contain a scrolling list of Utensils, called UtensilListView, wrapped in a NavigationStack (or NavigationSplitView if we need iPad support), with a navigation title of “Kitchen Utensils”.
 

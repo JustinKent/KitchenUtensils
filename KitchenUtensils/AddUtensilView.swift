@@ -15,34 +15,17 @@ struct AddUtensilView: View {
     @Environment(\.imageRepository) private var imageRepository
     @Environment(\.dismiss) private var dismiss
 
-    // Form state
-    @State private var name: String = ""
-    @State private var nameValidationMessage: String?
-    @State private var selectedPhotoItem: PhotosPickerItem?
-    @State private var pickedImageData: Data?
-    @State private var pickedUIImage: UIImage?
-
-    // Derivatives
-    private let maxNameLength = 100
-
-    // Save state
-    @State private var isSaving = false
-    @State private var saveErrorMessage: String?
-    @State private var showingSaveError = false
+    @State private var viewModel = AddUtensilViewModel()
 
     var body: some View {
         NavigationStack {
             Form {
                 Section("Details") {
-                    TextField("Name", text: $name)
-                        .onChange(of: name) { _, newValue in
-                            validateName(newValue)
-                        }
+                    TextField("Name", text: $viewModel.name)
                         .textInputAutocapitalization(.words)
-                        .autocorrectionDisabled()
                         .submitLabel(.done)
 
-                    if let message = nameValidationMessage, !message.isEmpty {
+                    if let message = viewModel.nameValidationMessage, !message.isEmpty {
                         Text(message)
                             .font(.footnote)
                             .foregroundStyle(.red)
@@ -51,26 +34,21 @@ struct AddUtensilView: View {
                 }
 
                 Section("Photo") {
-                    // Compute a snapshot in the Section scope (main-actor)
-                    let hasPreview = (pickedUIImage != nil)
-
+                    let hasPreview = (viewModel.pickedUIImage != nil)
                     PhotosPicker(
-                        selection: $selectedPhotoItem,
+                        selection: $viewModel.selectedPhotoItem,
                         matching: .images,
                         photoLibrary: .shared()
                     ) {
                         PhotoPickerLabel(hasPreview: hasPreview)
                     }
-                    .onChange(of: selectedPhotoItem) { _, newItem in
-                        Task { await loadPickedPhoto(from: newItem) }
-                    }
 
-                    if let preview = pickedUIImage {
+                    if let previewImage = viewModel.pickedUIImage {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Preview")
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
-                            Image(uiImage: preview)
+                            Image(uiImage: previewImage)
                                 .resizable()
                                 .scaledToFill()
                                 .clipped()
@@ -89,140 +67,35 @@ struct AddUtensilView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button {
-                        Task { await save() }
+                        Task {
+                            await viewModel.save(
+                                modelContext: modelContext,
+                                imageRepository: imageRepository,
+                                onSuccess: { dismiss() }
+                            )
+                        }
                     } label: {
-                        if isSaving {
+                        if viewModel.isSaving {
                             ProgressView()
                         } else {
                             Text("Save")
                         }
                     }
-                    .disabled(!canSave || isSaving)
+                    .disabled(!viewModel.enableSave)
                 }
             }
-            .alert("Could Not Save", isPresented: $showingSaveError, actions: {
+            .alert("Could Not Save", isPresented: $viewModel.showingSaveError, actions: {
                 Button("OK", role: .cancel) {}
             }, message: {
-                Text(saveErrorMessage ?? "An unknown error occurred.")
+                Text(viewModel.saveErrorMessage ?? "An unknown error occurred.")
             })
         }
-    }
-
-    // MARK: - Validation
-
-    private var trimmedName: String {
-        name.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    private var isNameValid: Bool {
-        nameValidationMessage == nil && !trimmedName.isEmpty
-    }
-
-    private var hasPickedImage: Bool {
-        pickedImageData != nil && pickedUIImage != nil
-    }
-
-    private var canSave: Bool {
-        isNameValid && hasPickedImage
-    }
-
-    private func validateName(_ newValue: String) {
-        let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        if trimmed.isEmpty {
-            nameValidationMessage = "Please enter a name."
-            return
-        }
-
-        if trimmed.count > maxNameLength {
-            nameValidationMessage = "Name must be \(maxNameLength) characters or fewer."
-            return
-        }
-
-        nameValidationMessage = nil
-    }
-
-    // MARK: - Photo loading
-
-    @MainActor
-    private func loadPickedPhoto(from item: PhotosPickerItem?) async {
-        pickedImageData = nil
-        pickedUIImage = nil
-
-        guard let item else { return }
-
-        // Prefer original image data if available
-        do {
-            if let data = try await item.loadTransferable(type: Data.self) {
-                pickedImageData = data
-                pickedUIImage = UIImage(data: data)
-                return
-            }
-        } catch {
-            // Fall through to next attempt
-        }
-    }
-
-    // MARK: - Save
-
-    @MainActor
-    private func save() async {
-        guard canSave, let imageData = pickedImageData else { return }
-        isSaving = true
-        defer { isSaving = false }
-
-        // Decide file extension: attempt to infer from data (or PhotosPicker item), else default to jpg
-        let ext = inferredFileExtension(from: imageData) ?? "jpg"
-
-        // Create a new utensil first to get its UUID for image naming
-        let utensil = Utensil(
-            id: UUID(),
-            name: trimmedName,
-            creationDate: Date()
-        )
-
-        do {
-            // Write the picked image data to a temporary file, then hand off to repository
-            let tempURL = try writeToTemporaryFile(data: imageData, withExtension: ext)
-
-            // Store original + thumbnail using utensil.id as the key
-            try await imageRepository.add(image: tempURL, named: utensil.id.uuidString)
-
-            // Persist the model
-            modelContext.insert(utensil)
-
-            // Cleanup temp file
-            try? FileManager.default.removeItem(at: tempURL)
-
-            // Dismiss on success
-            dismiss()
-        } catch {
-            saveErrorMessage = error.localizedDescription
-            showingSaveError = true
-        }
-    }
-
-    private func writeToTemporaryFile(data: Data, withExtension ext: String) throws -> URL {
-        let tempDir = FileManager.default.temporaryDirectory
-        let filename = "picked-\(UUID().uuidString).\(ext)"
-        let url = tempDir.appendingPathComponent(filename)
-        try data.write(to: url, options: .atomic)
-        return url
-    }
-
-    private func inferredFileExtension(from data: Data) -> String? {
-        // Infer from file signatures (very simple)
-        if data.starts(with: [0xFF, 0xD8, 0xFF]) { return "jpg" } // JPEG
-        if data.starts(with: [0x89, 0x50, 0x4E, 0x47]) { return "png" } // PNG
-        if data.starts(with: [0x52, 0x49, 0x46, 0x46]) { return "heic" } // HEIC/HEIF may vary; this is not precise
-        // Could expand with UTType detection if needed
-        return nil
     }
 }
 
 private struct PhotoPickerLabel: View {
     let hasPreview: Bool
-
+    
     var body: some View {
         HStack {
             Image(systemName: "photo.on.rectangle")
@@ -234,3 +107,4 @@ private struct PhotoPickerLabel: View {
 #Preview {
     AddUtensilView()
 }
+

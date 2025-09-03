@@ -5,8 +5,8 @@
 //  Created by Justin Kent on 9/2/25.
 //
 
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 @main
 struct KitchenUtensilsApp: App {
