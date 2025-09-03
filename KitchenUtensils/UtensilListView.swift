@@ -49,7 +49,7 @@ struct UtensilListView: View {
                 let utensil = utensils[index]
                 modelContext.delete(utensil)
                 Task {
-                    await imageRepository.delete(utensil)
+                    await imageRepository.delete(utensil.id.uuidString)
                 }
             }
         }
@@ -75,7 +75,7 @@ private struct UtensilCellView: View {
     
     private var thumbnailView: some View {
         Group {
-            if let uiImage = imageRepository.thumbnail(for: utensil) {
+            if let uiImage = imageRepository.thumbnail(for: utensil.id.uuidString) {
                 Image(uiImage: uiImage)
                     .resizable()
                     .scaledToFill()
@@ -112,7 +112,7 @@ private struct UtensilDetailView: View {
     
     private var imageView: some View {
         Group {
-            if let uiImage = imageRepository.original(for: utensil) {
+            if let uiImage = imageRepository.original(for: utensil.id.uuidString) {
                 Image(uiImage: uiImage)
                     .resizable()
                     .scaledToFill()
@@ -122,20 +122,6 @@ private struct UtensilDetailView: View {
                 EmptyView()
             }
         }
-    }
-}
-
-fileprivate extension ImageRepository {
-    func thumbnail(for utensil: Utensil) -> UIImage? {
-        self.thumbnail(for: utensil.id.uuidString)
-    }
-    
-    func original(for utensil: Utensil) -> UIImage? {
-        self.original(for: utensil.id.uuidString)
-    }
-    
-    func delete(_ utensil: Utensil) {
-        self.delete(utensil.id.uuidString)
     }
 }
 
